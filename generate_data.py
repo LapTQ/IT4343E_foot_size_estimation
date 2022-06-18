@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import random
 
+
 ap = argparse.ArgumentParser()
 
 ap.add_argument('--train_num', type=int, default=1) # TODO 1000
@@ -26,14 +27,34 @@ def make_dir(*args):
 
 
 def mask_page(pg_img):
-    # TODO
-    mask = np.zeros_like(pg_img, dtype='uint8')
+    # TODO cải tiến tiếp
+
+    Z = pg_img.reshape(-1, 3)
+    Z = np.float32(Z)
+
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    K = 2
+    ret, label, center = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+
+    center = np.uint8(center)
+    res = center[label.flatten()]
+    res = res.reshape(pg_img.shape)
+
+    mask = label.reshape(pg_img.shape[0], pg_img.shape[1]).astype('uint8') * 255
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=3)
+
     return mask
 
 
 def mask_foot(ft_img):
-    # TODO
-    mask = np.zeros_like(ft_img, dtype='uint8')
+    # TODO cải tiến cho nhiều ảnh hơn
+
+    hsv = cv2.cvtColor(ft_img, cv2.COLOR_BGR2HSV)
+    hsv[:, :, 0] = cv2.medianBlur(hsv[:, :, 0], 3)
+
+    mask = np.where(np.logical_and(0 < hsv[:, :, 0], hsv[:, :, 0] < 17), 255, 0).astype('uint8')
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=5)
+
     return mask
 
 
@@ -96,4 +117,7 @@ def main(args):
 
 if __name__ == '__main__':
 
-    main(args)
+    # main(args)
+
+    for i in range(1, 10):
+        cv2.imwrite(f'trainset/labels/demo{i}.jpg', mask_foot(cv2.imread(f'data/foot/{i}.jpg')))
