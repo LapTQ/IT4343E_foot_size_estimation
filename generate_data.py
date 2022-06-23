@@ -13,8 +13,8 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=10) # TODO 1000
-    ap.add_argument('--val_num', type=int, default=1) # TODO 200
+    ap.add_argument('--train_num', type=int, default=2000)
+    ap.add_argument('--dev_num', type=int, default=100)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
@@ -66,7 +66,7 @@ def mask_foot(ft_img):
 
 def get_bg_transform(bg_paths, p=0.5):
     return A.Compose([
-        A.RandomResizedCrop(height=512, width=512, scale=(0.01, 1.0), ratio=(0.2, 1.8), p=1),   # TODO square 512 is critical
+        A.RandomResizedCrop(height=512, width=512, scale=(0.01, 1.0), ratio=(0.2, 1.8), p=1),   # square 512 is critical
         A.RandomGridShuffle(p=p),
         A.Flip(p=p),
         A.Blur(p=p),
@@ -77,10 +77,6 @@ def get_bg_transform(bg_paths, p=0.5):
         A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=40, val_shift_limit=40, p=p),
         A.FDA(bg_paths, p=p),
         A.HistogramMatching(bg_paths, p=p),
-
-        # A.RandomBrightnessContrast(),
-        # A.ISONoise(),
-        # A.GridDropout(),
         ])
 
 
@@ -100,13 +96,21 @@ def get_ft_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(2.0, 4.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(2.0, 6.0), ratio=(1.0, 1.0), p=1),
         A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
         A.Perspective(fit_output=True, p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.RandomBrightnessContrast(p=p),
         A.HueSaturationValue(p=p),
     ])
+
+
+def get_whole_transform(p=0.5):
+    return A.Compose([
+        A.ISONoise(p=p),
+        A.GridDropout(p=p),
+    ])
+
 
 
 def paste(src, des, mask):
@@ -136,54 +140,54 @@ def main(args):
     # make dir for trainset and devset
     train_img_dir = make_dir('trainset', 'images')
     train_lbl_dir = make_dir('trainset', 'labels')
+    dev_img_dir = make_dir('devset', 'images')
+    dev_lbl_dir = make_dir('devset', 'labels')
 
-    # TODO do for devset
-    start = len(os.listdir(train_img_dir))
-    for i in range(args['train_num']):
+    for img_dir, lbl_dir, num in ((train_img_dir, train_lbl_dir, args['train_num']), (dev_img_dir, dev_lbl_dir, args['dev_num'])):
+        start = len(os.listdir(img_dir))
+        for i in range(num):
+            idx = random.randrange(len(ft_images))
+            ft_img, ft_msk = ft_images[idx], ft_masks[idx]
 
-        idx = random.randrange(len(ft_images))
-        ft_img, ft_msk = ft_images[idx], ft_masks[idx]
+            # create new augmented background
+            bg_transform = get_bg_transform(bg_paths, 0.5)
+            bg_transformed = bg_transform(image=cv2.cvtColor(random.choice(bg_images), cv2.COLOR_BGR2RGB))
+            syn_bg = cv2.cvtColor(bg_transformed['image'], cv2.COLOR_RGB2BGR)
 
-        # create new augmented background
-        bg_transform = get_bg_transform(bg_paths, 0.5)
-        bg_transformed = bg_transform(image=cv2.cvtColor(random.choice(bg_images), cv2.COLOR_BGR2RGB))
-        syn_bg = cv2.cvtColor(bg_transformed['image'], cv2.COLOR_RGB2BGR)
+            # create new augment page
+            idx = random.randrange(len(pg_images))
+            pg_img, pg_msk = pg_images[idx], pg_masks[idx]
+            pg_transform = get_pg_transform(0.5)
+            pg_transformed = pg_transform(image=cv2.cvtColor(pg_img, cv2.COLOR_BGR2RGB), mask=pg_msk)
+            syn_pg = cv2.cvtColor(pg_transformed['image'], cv2.COLOR_RGB2BGR)
+            syn_pg_msk = pg_transformed['mask']
 
-        # create new augment page
-        idx = random.randrange(len(pg_images))
-        pg_img, pg_msk = pg_images[idx], pg_masks[idx]
-        pg_transform = get_pg_transform(0.5)
-        pg_transformed = pg_transform(image=cv2.cvtColor(pg_img, cv2.COLOR_BGR2RGB), mask=pg_msk)
-        syn_pg = cv2.cvtColor(pg_transformed['image'], cv2.COLOR_RGB2BGR)
-        syn_pg_mask = pg_transformed['mask']
+            # create new augment foot
+            idx = random.randrange(len(ft_images))
+            ft_img, ft_msk = ft_images[idx], ft_masks[idx]
+            ft_transform = get_ft_transform(0.5)
+            ft_transformed = ft_transform(image=cv2.cvtColor(ft_img, cv2.COLOR_BGR2RGB), mask=ft_msk)
+            syn_ft = cv2.cvtColor(ft_transformed['image'], cv2.COLOR_RGB2BGR)
+            syn_ft_msk = ft_transformed['mask']
 
-        # create new augment foot
-        idx = random.randrange(len(ft_images))
-        ft_img, ft_msk = ft_images[idx], ft_masks[idx]
-        ft_transform = get_ft_transform(0.5)
-        ft_transformed = ft_transform(image=cv2.cvtColor(ft_img, cv2.COLOR_BGR2RGB), mask=ft_msk)
-        syn_ft = cv2.cvtColor(ft_transformed['image'], cv2.COLOR_RGB2BGR)
-        syn_ft_mask = ft_transformed['mask']
+            syn_img = paste(syn_pg, syn_bg, syn_pg_msk)
+            syn_img = paste(syn_ft, syn_img, syn_ft_msk)
 
-        syn_img = paste(syn_pg, syn_bg, syn_pg_mask)
-        syn_img = paste(syn_ft, syn_img, syn_ft_mask)
+            transform = get_whole_transform(p=0.5)
+            transformed = transform(image=cv2.cvtColor(syn_img, cv2.COLOR_BGR2RGB), masks=[syn_pg_msk, syn_ft_msk])
+            syn_img = cv2.cvtColor(transformed['image'], cv2.COLOR_RGB2BGR)
+            syn_pg_msk, syn_ft_msk = transformed['masks']
 
-        # create new augmented image
-        cv2.imwrite(f'trainset/labels/demo{i}.jpg', syn_img)
-        cv2.imwrite(f'trainset/labels/demo{i}_1.jpg', syn_pg_mask)
-        cv2.imwrite(f'trainset/labels/demo{i}_2.jpg', syn_ft_mask)
-
-
-
-
-
-
+            # create new augmented image
+            # cv2.imwrite(f'trainset/labels/demo{i}.jpg', syn_img)
+            # cv2.imwrite(f'trainset/labels/demo{i}_1.jpg', syn_pg_mask)
+            # cv2.imwrite(f'trainset/labels/demo{i}_2.jpg', syn_ft_mask)
 
 
-        # name = ('000000' + str(start + i))[-6:]
-        # cv2.imwrite(os.path.join(train_img_dir, name + '.jpg'), syn_img)
-        # cv2.imwrite(os.path.join(train_lbl_dir, name + '_1.jpg'), syn_pg_msk)
-        # cv2.imwrite(os.path.join(train_lbl_dir, name + '_2.jpg'), syn_ft_msk)
+            name = ('000000' + str(start + i))[-6:]
+            cv2.imwrite(os.path.join(img_dir, name + '.jpg'), syn_img)
+            cv2.imwrite(os.path.join(lbl_dir, name + '_1.jpg'), syn_pg_msk)
+            cv2.imwrite(os.path.join(lbl_dir, name + '_2.jpg'), syn_ft_msk)
 
 
 if __name__ == '__main__':
