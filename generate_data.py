@@ -7,14 +7,15 @@ from pathlib import Path
 import random
 
 import albumentations as A
+from tqdm import tqdm
 
 
 def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=2000)
-    ap.add_argument('--dev_num', type=int, default=100)
+    ap.add_argument('--train_num', type=int, default=100)
+    ap.add_argument('--dev_num', type=int, default=30)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
@@ -143,11 +144,10 @@ def main(args):
     dev_img_dir = make_dir('devset', 'images')
     dev_lbl_dir = make_dir('devset', 'labels')
 
-    for img_dir, lbl_dir, num in ((train_img_dir, train_lbl_dir, args['train_num']), (dev_img_dir, dev_lbl_dir, args['dev_num'])):
+    for mode, img_dir, lbl_dir, num in (('train', train_img_dir, train_lbl_dir, args['train_num']), ('dev', dev_img_dir, dev_lbl_dir, args['dev_num'])):
         start = len(os.listdir(img_dir))
-        for i in range(num):
-            idx = random.randrange(len(ft_images))
-            ft_img, ft_msk = ft_images[idx], ft_masks[idx]
+
+        for i in tqdm(range(num), ascii=True, desc='Generating for ' + mode):
 
             # create new augmented background
             bg_transform = get_bg_transform(bg_paths, 0.5)
@@ -195,6 +195,3 @@ if __name__ == '__main__':
     args = parse_opt()
 
     main(args)
-
-    # for i in range(10):
-    #     cv2.imwrite(f'trainset/labels/demo{i}.jpg', synth([cv2.imread(str(path)) for path in Path('data/background').glob('*')], None, None, None, None)[0])
