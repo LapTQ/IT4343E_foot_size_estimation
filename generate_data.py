@@ -85,7 +85,7 @@ def get_pg_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(2.0, 4.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(1, 3), ratio=(1.0, 1.0), p=1),
         A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
         A.Perspective(fit_output=True, p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
@@ -97,9 +97,9 @@ def get_ft_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(2.0, 6.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(1.0, 3.0), ratio=(1.0, 1.0), p=1),
         A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.Perspective(fit_output=True, p=p),
+        A.Perspective(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.RandomBrightnessContrast(p=p),
         A.HueSaturationValue(p=p),
@@ -186,8 +186,11 @@ def main(args):
 
             name = ('000000' + str(start + i))[-6:]
             cv2.imwrite(os.path.join(img_dir, name + '.jpg'), syn_img)
-            cv2.imwrite(os.path.join(lbl_dir, name + '_1.jpg'), syn_pg_msk)
-            cv2.imwrite(os.path.join(lbl_dir, name + '_2.jpg'), syn_ft_msk)
+            cv2.imwrite(os.path.join(lbl_dir, name + '_pg.jpg'), syn_pg_msk)
+            cv2.imwrite(os.path.join(lbl_dir, name + '_ft.jpg'), syn_ft_msk)
+
+
+            # TODO sinh thêm ảnh không có chân/giấy
 
 
 if __name__ == '__main__':
