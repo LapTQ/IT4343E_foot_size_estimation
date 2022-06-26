@@ -1,15 +1,17 @@
 import cv2
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToTensor
+import albumentations as A
 import numpy as np
 import os
 
 
 class FootDataset(Dataset):
-    def __init__(self, img_dir, lbl_dir, transforms=None):
+    def __init__(self, img_dir, lbl_dir, in_size, out_size):
         self.img_dir = img_dir
         self.lbl_dir = lbl_dir
-        self.tranforms = transforms
+        self.in_size = in_size
+        self.out_size = out_size
 
         self.img_names = os.listdir(img_dir)
 
@@ -27,10 +29,8 @@ class FootDataset(Dataset):
         pg_mask = cv2.imread(pg_path, 0)
         ft_mask = cv2.imread(ft_path, 0)
 
-        if self.tranforms:
-            transformed = self.tranforms(image=img, masks=[pg_mask, ft_mask])
-            img = transformed['image']
-            pg_mask, ft_mask = transformed['masks']
+        img = A.Resize(self.in_size, self.in_size)(image=img)['image']
+        pg_mask, ft_mask = A.Resize(self.out_size, self.out_size)(masks=[pg_mask, ft_mask])['masks']
 
         lbl =  np.stack([pg_mask, ft_mask], axis=2)
 
@@ -43,7 +43,12 @@ class FootDataset(Dataset):
 
 
 def get_dataloader(**kwargs):
-    dataset = FootDataset(img_dir=kwargs['img_dir'], lbl_dir=kwargs['lbl_dir'])
+    dataset = FootDataset(
+        img_dir=kwargs['img_dir'],
+        lbl_dir=kwargs['lbl_dir'],
+        in_size=kwargs['in_size'],
+        out_size=kwargs['out_size']
+    )
     dataloader = DataLoader(dataset, batch_size=kwargs['batch_size'], shuffle=kwargs['shuffle'])
     return dataloader
 

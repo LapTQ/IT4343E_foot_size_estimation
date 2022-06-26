@@ -1,6 +1,7 @@
 import argparse
 import os
 from tqdm import tqdm
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -19,6 +20,7 @@ def parse_opt():
     ap.add_argument('--dev', type=str, default='devset')
     ap.add_argument('--batch_size', type=int, default=32)
     ap.add_argument('--weights', type=str, default=None)
+    ap.add_argument('--size', type=int, default=512)
 
     args = vars(ap.parse_args())
 
@@ -27,10 +29,22 @@ def parse_opt():
 
 def main(args):
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    net = UNet(3, 2).to(device)
+
+    if args['weights']:
+        net.load_state_dict(torch.load(args['weights']))
+
+    # TODO auto detect #channels
+    out_size = net(np.zeros(1, 3, args['size'], args['size'])).shape[-1]
+
+
     train_loader = get_dataloader(
         img_dir=os.path.join(args['train'], 'images'),
         lbl_dir=os.path.join(args['train'], 'labels'),
         batch_size=args['batch_size'],
+        in_size=args['size'],
+        out_size=out_size,
         shuffle=True
     )
 
@@ -38,14 +52,12 @@ def main(args):
         img_dir=os.path.join(args['dev'], 'images'),
         lbl_dir=os.path.join(args['dev'], 'labels'),
         batch_size=args['batch_size'],
+        in_size=args['size'],
+        out_size=out_size,
         shuffle=False
     )
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 2).to(device)
 
-    if args['weights']:
-        net.load_state_dict(torch.load(args['weights']))
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, nesterov=True)
