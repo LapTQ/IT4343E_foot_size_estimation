@@ -31,4 +31,5 @@ if file:
     pg_mask, ft_mask = y[0], y[1]
 
     collage = np.concatenate([pg_mask, ft_mask], axis=1)
+    collage = cv2.cvtColor(collage, cv2.COLOR_GRAY2RGB)
     st.image(Image.fromarray(collage))
