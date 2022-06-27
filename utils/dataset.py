@@ -4,22 +4,25 @@ from torchvision.transforms import ToTensor
 import albumentations as A
 import numpy as np
 import os
+import random
 
 
 class FootDataset(Dataset):
-    def __init__(self, img_dir, lbl_dir, in_size, out_size):
+    def __init__(self, img_dir, lbl_dir, in_size, out_size, n=768):
         self.img_dir = img_dir
         self.lbl_dir = lbl_dir
         self.in_size = in_size
         self.out_size = out_size
+        self.n = n
 
         self.img_names = os.listdir(img_dir)
 
     def __len__(self):
-        return len(self.img_names)
+        return self.n # len(self.img_names)
 
     def __getitem__(self, idx):
-        name, ext = os.path.splitext(self.img_names[idx])
+        sample = random.choices(self.img_names, k=self.n)
+        name, ext = os.path.splitext(sample[idx])
         img_path = os.path.join(self.img_dir, name + ext)
         pg_path = os.path.join(self.lbl_dir, name + '_pg' + ext)
         ft_path = os.path.join(self.lbl_dir, name + '_ft' + ext)

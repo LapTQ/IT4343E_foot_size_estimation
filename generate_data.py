@@ -14,8 +14,8 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=10000)
-    ap.add_argument('--dev_num', type=int, default=100)
+    ap.add_argument('--train_num', type=int, default=20)
+    ap.add_argument('--dev_num', type=int, default=0)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
@@ -75,8 +75,8 @@ def get_bg_transform(bg_paths, p=0.5):
         A.SafeRotate(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=40, val_shift_limit=80, p=p),
-        A.FDA(bg_paths, p=p),
-        A.HistogramMatching(bg_paths, p=p),
+        # A.FDA(bg_paths, p=p),
+        # A.HistogramMatching(bg_paths, p=p),
         ])
 
 
@@ -84,7 +84,7 @@ def get_pg_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(0.5, 1.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(0.75, 1.0), ratio=(1.0, 1.0), p=1),
         A.Perspective(fit_output=True, p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
     ])
@@ -94,7 +94,7 @@ def get_ft_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(0.5, 1.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(1.0, 1.0), ratio=(1.0, 1.0), p=1),
         A.Perspective(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.HueSaturationValue(p=p),
