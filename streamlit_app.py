@@ -17,11 +17,14 @@ net.load_state_dict(torch.load('weights/ckpt.pth', map_location=device))
 file = st.file_uploader('Upload image')
 
 if file:
-    img = np.array(Image.open(file, formats='RGB'))
-    scale = 350 / max(img.shape)
+    img = Image.open(file)
+    st.image(img)
 
+    img = np.array(img.convert('RGB'))
+    scale = 350 / max(img.shape)
     W, H = int(img.shape[1] * scale), int(img.shape[0] * scale)
     img = cv2.resize(img, (W, H))
+
     x = ToTensor()(img.copy()).unsqueeze(0)
 
     y = np.where(net(x).squeeze() > 0.5, 1, 0).astype('uint8')
