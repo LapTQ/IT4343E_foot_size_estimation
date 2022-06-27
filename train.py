@@ -61,8 +61,8 @@ def main(args):
 
 
     criterion = nn.BCELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=3)
+    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, nesterov=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2)
 
     for epoch in range(args['epoch']):
 

@@ -20,3 +20,7 @@ python generate_data.py --train_num 2000 --dev_num 100
 ```
 python train.py --epoch 50 --batch_size 8 --size 350
 ```
+
+# Try this app
+
+[here](https://share.streamlit.io/LapTQ/foot_size_estimation/main/streamlit_app.py)
