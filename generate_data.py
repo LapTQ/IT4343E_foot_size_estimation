@@ -14,8 +14,8 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=100)
-    ap.add_argument('--dev_num', type=int, default=30)
+    ap.add_argument('--train_num', type=int, default=10000)
+    ap.add_argument('--dev_num', type=int, default=100)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
@@ -70,12 +70,11 @@ def get_bg_transform(bg_paths, p=0.5):
         A.RandomResizedCrop(height=512, width=512, scale=(0.01, 1.0), ratio=(0.2, 1.8), p=1),   # square 512 is critical
         A.RandomGridShuffle(p=p),
         A.Flip(p=p),
-        A.Blur(p=p),
         A.Perspective(p=p),
         A.PiecewiseAffine(p=p),
         A.SafeRotate(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
-        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=40, val_shift_limit=40, p=p),
+        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=40, val_shift_limit=80, p=p),
         A.FDA(bg_paths, p=p),
         A.HistogramMatching(bg_paths, p=p),
         ])
@@ -85,11 +84,9 @@ def get_pg_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(1, 3), ratio=(1.0, 1.0), p=1),
-        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
+        A.RandomResizedCrop(512, 512, scale=(0.5, 1.0), ratio=(1.0, 1.0), p=1),
         A.Perspective(fit_output=True, p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
-        A.RandomBrightnessContrast(p=p),
     ])
 
 
@@ -97,11 +94,9 @@ def get_ft_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(1.0, 3.0), ratio=(1.0, 1.0), p=1),
-        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
+        A.RandomResizedCrop(512, 512, scale=(0.5, 1.0), ratio=(1.0, 1.0), p=1),
         A.Perspective(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
-        A.RandomBrightnessContrast(p=p),
         A.HueSaturationValue(p=p),
     ])
 
@@ -109,7 +104,10 @@ def get_ft_transform(p=0.5):
 def get_whole_transform(p=0.5):
     return A.Compose([
         A.ISONoise(p=p),
-        A.GridDropout(p=p),
+        A.GridDropout(p=0.25),
+        A.MotionBlur(blur_limit=(3, 10), p=p),
+        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
+        A.RandomBrightnessContrast(p=1),
     ])
 
 

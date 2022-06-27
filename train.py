@@ -2,6 +2,7 @@ import argparse
 import os
 from tqdm import tqdm
 import numpy as np
+from time import sleep
 
 import torch
 import torch.nn as nn
@@ -18,9 +19,9 @@ def parse_opt():
     ap.add_argument('--epoch', type=int, default=50)
     ap.add_argument('--train', type=str, default='trainset')
     ap.add_argument('--dev', type=str, default='devset')
-    ap.add_argument('--batch_size', type=int, default=32)
+    ap.add_argument('--batch_size', type=int, default=8)
     ap.add_argument('--weights', type=str, default=None)
-    ap.add_argument('--size', type=int, default=512)
+    ap.add_argument('--size', type=int, default=350)
 
     args = vars(ap.parse_args())
 
@@ -33,11 +34,13 @@ def main(args):
     net = UNet(3, 2).to(device)
 
     if args['weights']:
+        print('Loading pretrained at ' + args['weights'])
         net.load_state_dict(torch.load(args['weights']))
 
     # TODO auto detect #channels
-    out_size = net(np.zeros(1, 3, args['size'], args['size'])).shape[-1]
-
+    out_size = net(torch.zeros((1, 3, args['size'], args['size']),
+                               dtype=torch.float32).to(device)
+                   ).shape[-1]
 
     train_loader = get_dataloader(
         img_dir=os.path.join(args['train'], 'images'),
@@ -59,15 +62,17 @@ def main(args):
 
 
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, nesterov=True)
+    criterion = nn.BCELoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=3)
 
     for epoch in range(args['epoch']):
 
-        with tqdm(enumerate(train_loader), ascii=True, desc=f'Epoch {epoch}', unit='batch') as t:
+        with tqdm(enumerate(train_loader), ascii=True, desc=f'Epoch {epoch + 1} [{len(train_loader)}]', unit='batch') as t:
             net.train()
             running_loss = 0.0
-            for i, data in enumerate(train_loader):
+            total_loss = 0.0
+            for i, data in t:
                 inputs, labels = data[0].to(device), data[1].to(device)
 
                 optimizer.zero_grad()
@@ -77,27 +82,32 @@ def main(args):
                 loss.backward()
                 optimizer.step()
 
-                running_loss += loss.item()
+                # running_loss += loss.item()
+                running_loss += float(loss)
+                total_loss += float(loss)
                 if i % 3 == 2:
                     t.set_postfix(loss=running_loss/3.0)
-                    # print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 3}')
-                    last_running_loss = running_loss/3.0
                     running_loss = 0.0
+
+            total_loss /= len(train_loader)
 
             if not os.path.isdir('weights'):
                 os.mkdir('weights')
-            torch.save(net.state_dict(), 'weights')
+            torch.save(net.state_dict(), 'weights/ckpt.pth')
 
             net.eval()
-            total_loss = 0.0
-            for i, data in enumerate(dev_loader):
+            total_dev_loss = 0.0
+            for data in dev_loader:
                 inputs, labels = data[0].to(device), data[1].to(device)
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
-                total_loss += loss.item()
+                total_dev_loss += float(loss)
 
-                if i % 3 == 2:
-                    t.set_postfix(loss=last_running_loss, val_loss=total_loss/i)
+            total_dev_loss /= len(dev_loader)
+            t.set_postfix(loss=total_loss, dev_loss=total_dev_loss, lr=optimizer.param_groups[0]['lr'])
+            print(optimizer.param_groups[0]['lr'], total_loss, total_dev_loss)
+            scheduler.step(total_loss)
+
 
 
 if __name__ == '__main__':

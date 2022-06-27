@@ -30,7 +30,7 @@ class FootDataset(Dataset):
         ft_mask = cv2.imread(ft_path, 0)
 
         img = A.Resize(self.in_size, self.in_size)(image=img)['image']
-        pg_mask, ft_mask = A.Resize(self.out_size, self.out_size)(masks=[pg_mask, ft_mask])['masks']
+        pg_mask, ft_mask = A.Resize(self.out_size, self.out_size)(image=img, masks=[pg_mask, ft_mask])['masks']
 
         lbl =  np.stack([pg_mask, ft_mask], axis=2)
 
