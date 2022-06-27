@@ -1,8 +1,22 @@
 # foot_size_estimation
 
 
+# Install
+
+```
+git clone https://github.com/LapTQ/foot_size_estimation.git
+cd foot_size_estimation
+pip install -r requirements.txt
+```
+
 # Generate training dataset
 
-```python
-python generate_data.py --train_num 1000 --dev_num 100 
+```
+python generate_data.py --train_num 2000 --dev_num 100 
+```
+
+# Train
+
+```
+python train.py --epoch 50 --batch_size 8 --size 350
 ```

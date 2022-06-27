@@ -1,8 +1,6 @@
 import argparse
 import os
 from tqdm import tqdm
-import numpy as np
-from time import sleep
 
 import torch
 import torch.nn as nn

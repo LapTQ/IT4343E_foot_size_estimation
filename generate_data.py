@@ -14,8 +14,8 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=20)
-    ap.add_argument('--dev_num', type=int, default=0)
+    ap.add_argument('--train_num', type=int, default=2000)
+    ap.add_argument('--dev_num', type=int, default=100)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
