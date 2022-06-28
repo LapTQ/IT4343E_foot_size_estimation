@@ -30,5 +30,7 @@ if file:
     y = np.where(net(x).squeeze() > 0.5, 255, 0).astype('uint8')
     pg_mask, ft_mask = y[0], y[1]
 
+
+
     collage = np.concatenate([pg_mask, ft_mask], axis=1)
     st.image(Image.fromarray(collage))
