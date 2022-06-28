@@ -14,13 +14,13 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--epoch', type=int, default=50)
+    ap.add_argument('--epoch', type=int, default=100)
     ap.add_argument('--train', type=str, default='trainset')
     ap.add_argument('--dev', type=str, default='devset')
     ap.add_argument('--batch_size', type=int, default=8)
     ap.add_argument('--lr', type=float, default=1e-1)
     ap.add_argument('--weights', type=str, default=None)
-    ap.add_argument('--size', type=int, default=350)
+    ap.add_argument('--size', type=int, default=224)
 
     args = vars(ap.parse_args())
 

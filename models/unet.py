@@ -14,9 +14,9 @@ class Block(nn.Module):
             nn.Conv2d(in_channels, mid_channels, kernel_size=3),
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
-            # nn.Conv2d(mid_channels, mid_channels, kernel_size=3),
-            # nn.BatchNorm2d(mid_channels),
-            # nn.ReLU(inplace=True),
+            nn.Conv2d(mid_channels, mid_channels, kernel_size=3),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True),
             nn.Conv2d(mid_channels, out_channels, kernel_size=3),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
@@ -101,5 +101,5 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     unet = UNet(3, 2)
-    a = torch.ones((1, 3, 350, 350))
+    a = torch.ones((1, 3, 224, 224))
     print(unet(a).shape)
