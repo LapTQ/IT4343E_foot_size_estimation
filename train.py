@@ -18,6 +18,7 @@ def parse_opt():
     ap.add_argument('--train', type=str, default='trainset')
     ap.add_argument('--dev', type=str, default='devset')
     ap.add_argument('--batch_size', type=int, default=8)
+    ap.add_argument('--lr', type=float, default=1e-1)
     ap.add_argument('--weights', type=str, default=None)
     ap.add_argument('--size', type=int, default=350)
 
@@ -61,7 +62,7 @@ def main(args):
 
 
     criterion = nn.BCELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, nesterov=True)
+    optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, nesterov=True)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2)
 
     for epoch in range(args['epoch']):
