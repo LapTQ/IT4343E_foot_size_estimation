@@ -176,12 +176,6 @@ def main(args):
             syn_img = cv2.cvtColor(transformed['image'], cv2.COLOR_RGB2BGR)
             syn_pg_msk, syn_ft_msk = transformed['masks']
 
-            # create new augmented image
-            # cv2.imwrite(f'trainset/labels/demo{i}.jpg', syn_img)
-            # cv2.imwrite(f'trainset/labels/demo{i}_1.jpg', syn_pg_mask)
-            # cv2.imwrite(f'trainset/labels/demo{i}_2.jpg', syn_ft_mask)
-
-
             name = ('000000' + str(start + i))[-6:]
             cv2.imwrite(os.path.join(img_dir, name + '.jpg'), syn_img)
             cv2.imwrite(os.path.join(lbl_dir, name + '_pg.jpg'), syn_pg_msk)

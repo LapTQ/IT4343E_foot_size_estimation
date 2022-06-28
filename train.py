@@ -5,6 +5,8 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import albumentations as A
+import cv2
 
 from models.unet import UNet
 from utils.dataset import get_dataloader
@@ -30,16 +32,24 @@ def parse_opt():
 def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 2).to(device)
+    net = UNet(3).to(device)
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
-        net.load_state_dict(torch.load(args['weights']))
+        net.load_state_dict(torch.load(args['weights']), map_location=device)
 
     # TODO auto detect #channels
     out_size = net(torch.zeros((1, 3, args['size'], args['size']),
                                dtype=torch.float32).to(device)
                    ).shape[-1]
+
+    transform = A.Compose([
+        A.ISONoise(p=0.5),
+        # A.GridDropout(p=0.25),
+        A.MotionBlur(blur_limit=(3, 10), p=0.5),
+        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
+        # A.RandomBrightnessContrast(p=1),
+    ])
 
     train_loader = get_dataloader(
         img_dir=os.path.join(args['train'], 'images'),
@@ -47,6 +57,7 @@ def main(args):
         batch_size=args['batch_size'],
         in_size=args['size'],
         out_size=out_size,
+        transform=transform,
         shuffle=True
     )
 
@@ -63,11 +74,11 @@ def main(args):
 
     criterion = nn.BCELoss()
     optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, nesterov=True)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2, verbose=True)
 
     for epoch in range(args['epoch']):
 
-        with tqdm(enumerate(train_loader), ascii=True, desc=f'Epoch {epoch + 1} [{len(train_loader)}]', unit='batch') as t:
+        with tqdm(enumerate(train_loader), ascii=True, desc=f'Epoch {epoch + 1} [{len(train_loader)}]', unit=' batch') as t:
             net.train()
             running_loss = 0.0
             total_loss = 0.0

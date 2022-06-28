@@ -8,12 +8,13 @@ import random
 
 
 class FootDataset(Dataset):
-    def __init__(self, img_dir, lbl_dir, in_size, out_size, n=768):
+    def __init__(self, img_dir, lbl_dir, in_size, out_size, transform=None, n=768):
         self.img_dir = img_dir
         self.lbl_dir = lbl_dir
         self.in_size = in_size
         self.out_size = out_size
         self.n = n
+        self.transform = transform
 
         self.img_names = os.listdir(img_dir)
 
@@ -31,6 +32,11 @@ class FootDataset(Dataset):
         img = cv2.imread(img_path)[:, :, ::-1]
         pg_mask = cv2.imread(pg_path, 0)
         ft_mask = cv2.imread(ft_path, 0)
+
+        if self.transform:
+            transformed = self.transform(image=img, masks=[pg_mask, ft_mask])
+            img = transformed['image']
+            pg_mask, ft_mask = transformed['masks']
 
         img = A.Resize(self.in_size, self.in_size)(image=img)['image']
         pg_mask, ft_mask = A.Resize(self.out_size, self.out_size)(image=img, masks=[pg_mask, ft_mask])['masks']
@@ -50,7 +56,8 @@ def get_dataloader(**kwargs):
         img_dir=kwargs['img_dir'],
         lbl_dir=kwargs['lbl_dir'],
         in_size=kwargs['in_size'],
-        out_size=kwargs['out_size']
+        out_size=kwargs['out_size'],
+        transform=kwargs['transform']
     )
     dataloader = DataLoader(dataset, batch_size=kwargs['batch_size'], shuffle=kwargs['shuffle'])
     return dataloader
