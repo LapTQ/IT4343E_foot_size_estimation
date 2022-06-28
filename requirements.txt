@@ -1,7 +1,7 @@
 # pip install -r requirements.txt
 
 
-numpy~=1.22.3
+# numpy~=1.22.3
 albumentations~=1.2.0
 opencv-python~=4.5.4.60
 opencv-contrib-python~=4.5.4.60
