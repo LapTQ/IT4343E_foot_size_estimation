@@ -104,10 +104,10 @@ def get_ft_transform(p=0.5):
 def get_whole_transform(p=0.5):
     return A.Compose([
         A.ISONoise(p=p),
-        A.GridDropout(p=0.25),
+        # A.GridDropout(p=0.25),
         A.MotionBlur(blur_limit=(3, 10), p=p),
         A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
-        A.RandomBrightnessContrast(p=1),
+        # A.RandomBrightnessContrast(p=1),
     ])
 
 
