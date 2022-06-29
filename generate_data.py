@@ -85,9 +85,10 @@ def get_pg_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
+        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=1),
         A.Perspective(fit_output=True, p=p),
-        A.RandomResizedCrop(512, 512, scale=(0.75, 2.0), ratio=(1.0, 1.0), p=1),
+        A.RandomResizedCrop(512, 512, scale=(0.35, 1.5), ratio=(1.0, 1.0), p=1),
+        A.RandomShadow(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
     ])
 

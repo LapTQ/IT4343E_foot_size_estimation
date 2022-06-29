@@ -5,13 +5,17 @@ import numpy as np
 
 import torch
 from torchvision.transforms import ToTensor
+import torch.nn.functional as F
 
-from models.unet import UNet
+from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
 
 st.title('Foot size estimation')
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net = UNet(3, 2).to(device)
+
+net = deeplabv3_mobilenet_v3_large(pretrained=True)
+net.classifier[4] = torch.nn.Conv2d(256, 1, kernel_size=1)
+net.to(device)
 net.load_state_dict(torch.load('weights/ckpt.pth', map_location=device))
 
 file = st.file_uploader('Upload image')
@@ -27,10 +31,10 @@ if file:
 
     x = ToTensor()(img.copy()).unsqueeze(0)
 
-    y = np.where(net(x).squeeze() > 0.5, 255, 0).astype('uint8')
-    pg_mask, ft_mask = y[0], y[1]
+    net.eval()
+    with torch.no_grad():
+        y = F.sigmoid(net(x)['out'])
 
+    mask = y.cpu().squeeze().numpy()
 
-
-    collage = np.concatenate([pg_mask, ft_mask], axis=1)
-    st.image(Image.fromarray(collage))
+    st.image(Image.fromarray(mask))

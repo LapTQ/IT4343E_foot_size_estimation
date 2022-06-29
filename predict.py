@@ -45,7 +45,8 @@ def main(args):
     with torch.no_grad():
         y = F.sigmoid(net(x)['out'])
 
-    mask = y.cpu().squeeze()
+    mask = y.cpu().squeeze().numpy()
+    print(mask)
     plt.imshow(mask)
     plt.show()
 
