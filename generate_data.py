@@ -14,8 +14,8 @@ def parse_opt():
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('--train_num', type=int, default=2000)
-    ap.add_argument('--dev_num', type=int, default=100)
+    ap.add_argument('--train_num', type=int, default=0)
+    ap.add_argument('--dev_num', type=int, default=20)
     ap.add_argument('--page', type=str, default=os.path.join('data', 'page'))
     ap.add_argument('--foot', type=str, default=os.path.join('data', 'foot'))
     ap.add_argument('--background', type=str, default=os.path.join('data', 'background'))
@@ -60,7 +60,7 @@ def mask_foot(ft_img):
     hsv = cv2.cvtColor(ft_img, cv2.COLOR_BGR2HSV)
     hsv[:, :, 0] = cv2.medianBlur(hsv[:, :, 0], 3)
 
-    mask = np.where(np.logical_and(0 < hsv[:, :, 0], hsv[:, :, 0] < 17), 255, 0).astype('uint8')    # TODO xem lại đoạn này, bỏ cái 0 < đi được không?
+    mask = np.where(np.logical_and(0 < hsv[:, :, 0], hsv[:, :, 0] < 20), 255, 0).astype('uint8')    # TODO xem lại đoạn này, bỏ cái 0 < đi được không?
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=5)
 
     return mask
@@ -95,21 +95,10 @@ def get_ft_transform(p=0.5):
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
         A.RandomResizedCrop(512, 512, scale=(1.0, 1.0), ratio=(1.0, 1.0), p=1),
-        A.Perspective(p=p),
+        # A.Perspective(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.HueSaturationValue(p=p),
     ])
-
-
-def get_whole_transform(p=0.5):
-    return A.Compose([
-        A.ISONoise(p=p),
-        # A.GridDropout(p=0.25),
-        A.MotionBlur(blur_limit=(3, 10), p=p),
-        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
-        # A.RandomBrightnessContrast(p=1),
-    ])
-
 
 
 def paste(src, des, mask):
@@ -184,3 +173,12 @@ if __name__ == '__main__':
     args = parse_opt()
 
     main(args)
+
+    # import matplotlib.pyplot as plt
+    #
+    # path = '/home/tran/Downloads/8.jpg'
+    #
+    # img = cv2.imread(path)
+    # mask = mask_foot(img)
+    # plt.imshow(mask)
+    # plt.show()

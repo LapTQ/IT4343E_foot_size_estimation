@@ -104,7 +104,13 @@ class UNet(nn.Module):
 
 
 if __name__ == '__main__':
-    unet = UNet(3, 3)
+    net = UNet(3, 1)
+
+    from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
+
+    net = deeplabv3_mobilenet_v3_large(pretrained=True)
+    net.classifier[4] = torch.nn.Conv2d(256, 1, kernel_size=1)
+
     a = torch.ones((4, 3, 224, 224))
-    print(unet(a).shape)
+    print(net(a)['out'].shape)
 

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from torchvision.transforms import ToTensor
 import torch.nn.functional as F
+from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
 
 from models.unet import UNet
 
@@ -30,7 +31,10 @@ def main(args):
         os.makedirs(args['output'])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 3).to(device)
+    # net = UNet(3, 3).to(device)
+    net = deeplabv3_mobilenet_v3_large(pretrained=True)
+    net.classifier[4] = torch.nn.Conv2d(256, 3, kernel_size=1)
+    net.to(device)
 
     net.load_state_dict(torch.load(args['weights'], map_location=device))
 
@@ -40,8 +44,9 @@ def main(args):
     img = cv2.resize(img, (W, H))
     x = ToTensor()(img[:, :, ::-1].copy()).unsqueeze(0)
 
+    net.eval()
     with torch.no_grad():
-        y = F.softmax(net(x), dim=1)
+        y = F.softmax(net(x)['out'], dim=1)
 
     mask = y.cpu().squeeze().permute(1, 2, 0)
     plt.imshow(mask)
@@ -59,6 +64,7 @@ def main(args):
     # plt.show()
 
     # return pg_mask, ft_mask
+
 
 
 if __name__ == '__main__':

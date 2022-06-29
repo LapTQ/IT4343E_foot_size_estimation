@@ -45,12 +45,11 @@ class FootDataset(Dataset):
 
         lbl = np.zeros((self.out_size, self.out_size), dtype='int64')
         lbl[pg_mask == 255] = 1
-        lbl[ft_mask == 255] = 2
+        lbl[ft_mask == 255] = 0
 
         # uint8 [0, 255] (h, w, c) to float [0., 1.] (c, h, w)
         img = ToTensor()(img.copy())
         lbl = torch.from_numpy(lbl)
-        # lbl = one_hot(lbl).permute(2, 0, 1).float()
 
         return img, lbl
 

@@ -37,16 +37,17 @@ def main(args):
 
     # net = UNet(3, 3).to(device)
     net = deeplabv3_mobilenet_v3_large(pretrained=True)
-    net.classifier[4] = torch.nn.Conv2d(256, 3, kernel_size=1).to(device)
+    net.classifier[4] = torch.nn.Conv2d(256, 1, kernel_size=1)
+    net.to(device)
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
         net.load_state_dict(torch.load(args['weights']), map_location=device)
 
     # TODO auto detect #channels
-    out_size = net(torch.zeros((1, 3, args['size'], args['size']),
+    out_size = net(torch.zeros((2, 3, args['size'], args['size']),
                                dtype=torch.float32).to(device)
-                   ).shape[-1]
+                   )['out'].shape[-1]
 
     transform = A.Compose([
         A.ISONoise(p=0.5),
@@ -76,7 +77,7 @@ def main(args):
         shuffle=False
     )
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, nesterov=True)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2, verbose=True)
 
@@ -91,7 +92,7 @@ def main(args):
 
                 optimizer.zero_grad()
 
-                outputs = net(inputs)
+                outputs = net(inputs)['out']
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
@@ -113,7 +114,7 @@ def main(args):
             total_dev_loss = 0.0
             for data in dev_loader:
                 inputs, labels = data[0].to(device), data[1].to(device)
-                outputs = net(inputs)
+                outputs = net(inputs)['out']
                 loss = criterion(outputs, labels)
                 total_dev_loss += float(loss)
 
@@ -130,5 +131,3 @@ if __name__ == '__main__':
 
     main(args)
 
-
-# nn.BCELoss:
