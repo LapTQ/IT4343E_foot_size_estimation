@@ -9,8 +9,6 @@ from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
 
-from models.unet import UNet
-
 
 def parse_opt():
 
@@ -31,9 +29,8 @@ def main(args):
         os.makedirs(args['output'])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # net = UNet(3, 3).to(device)
     net = deeplabv3_mobilenet_v3_large(pretrained=True)
-    net.classifier[4] = torch.nn.Conv2d(256, 3, kernel_size=1)
+    net.classifier[4] = torch.nn.Conv2d(256, 1, kernel_size=1)
     net.to(device)
 
     net.load_state_dict(torch.load(args['weights'], map_location=device))
@@ -46,9 +43,9 @@ def main(args):
 
     net.eval()
     with torch.no_grad():
-        y = F.softmax(net(x)['out'], dim=1)
+        y = F.sigmoid(net(x)['out'])
 
-    mask = y.cpu().squeeze().permute(1, 2, 0)
+    mask = y.cpu().squeeze()
     plt.imshow(mask)
     plt.show()
 

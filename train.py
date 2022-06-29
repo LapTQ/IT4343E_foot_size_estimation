@@ -131,3 +131,8 @@ if __name__ == '__main__':
 
     main(args)
 
+
+
+# BCELoss: model with sigmoid, target float
+# BCEWithLogitsLoss: model without sigmoid, target float?
+# CrossEntropyLoss: model without softmax, target can be index (int) or onehot (float?)

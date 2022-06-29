@@ -44,11 +44,12 @@ def mask_page(pg_img):
     K = 2
     ret, label, center = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
-    center = np.uint8(center)
-    res = center[label.flatten()]
-    res = res.reshape(pg_img.shape)
+    # for demo only
+    # center = np.uint8(center)
+    # res = center[label.flatten()]
+    # res = res.reshape(pg_img.shape)
 
-    mask = label.reshape(pg_img.shape[0], pg_img.shape[1]).astype('uint8') * 255
+    mask = 255 - label.reshape(pg_img.shape[0], pg_img.shape[1]).astype('uint8') * 255
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=3)
 
     return mask
@@ -84,8 +85,9 @@ def get_pg_transform(p=0.5):
     return A.Compose([
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
-        A.RandomResizedCrop(512, 512, scale=(0.75, 1.0), ratio=(1.0, 1.0), p=1),
+        A.SafeRotate(limit=180, border_mode=cv2.BORDER_CONSTANT, p=0.5),
         A.Perspective(fit_output=True, p=p),
+        A.RandomResizedCrop(512, 512, scale=(0.75, 2.0), ratio=(1.0, 1.0), p=1),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
     ])
 
@@ -95,7 +97,7 @@ def get_ft_transform(p=0.5):
         A.LongestMaxSize(max_size=512, p=1),
         A.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT, p=1),
         A.RandomResizedCrop(512, 512, scale=(1.0, 1.0), ratio=(1.0, 1.0), p=1),
-        # A.Perspective(p=p),
+        A.Perspective(p=p),
         A.Downscale(scale_min=0.5, scale_max=0.999, p=p),
         A.HueSaturationValue(p=p),
     ])
@@ -174,9 +176,9 @@ if __name__ == '__main__':
 
     main(args)
 
-    # import matplotlib.pyplot as plt
-    #
-    # path = '/home/tran/Downloads/8.jpg'
+    import matplotlib.pyplot as plt
+
+    # path = 'data/page/2.jpg'
     #
     # img = cv2.imread(path)
     # mask = mask_foot(img)

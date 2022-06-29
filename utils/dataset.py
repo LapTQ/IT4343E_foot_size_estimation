@@ -46,6 +46,7 @@ class FootDataset(Dataset):
         lbl = np.zeros((self.out_size, self.out_size), dtype='int64')
         lbl[pg_mask == 255] = 1
         lbl[ft_mask == 255] = 0
+        lbl = np.expand_dims(lbl, axis=0).astype('float32')
 
         # uint8 [0, 255] (h, w, c) to float [0., 1.] (c, h, w)
         img = ToTensor()(img.copy())
@@ -71,3 +72,6 @@ if __name__ == '__main__':
     dataloader = get_dataloader(img_dir='../devset/images', lbl_dir='../devset/labels', batch_size=4, in_size=224, out_size=216, transform=None, shuffle=True)
     images, labels = next(iter(dataloader))
     print(labels.shape)
+    import matplotlib.pyplot as plt
+    plt.imshow(labels[0][0].float())
+    plt.show()
