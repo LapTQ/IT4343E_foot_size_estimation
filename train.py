@@ -32,7 +32,7 @@ def parse_opt():
 def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 2).to(device)
+    net = UNet(3, 3).to(device)
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
@@ -71,9 +71,7 @@ def main(args):
         shuffle=False
     )
 
-
-
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, nesterov=True)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2, verbose=True)
 
@@ -126,3 +124,6 @@ if __name__ == '__main__':
     args = parse_opt()
 
     main(args)
+
+
+# nn.BCELoss:

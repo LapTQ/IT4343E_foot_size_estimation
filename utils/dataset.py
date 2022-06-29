@@ -50,7 +50,7 @@ class FootDataset(Dataset):
         # uint8 [0, 255] (h, w, c) to float [0., 1.] (c, h, w)
         img = ToTensor()(img.copy())
         lbl = torch.from_numpy(lbl)
-        lbl = one_hot(lbl).permute(2, 0, 1)
+        # lbl = one_hot(lbl).permute(2, 0, 1).float()
 
         return img, lbl
 
@@ -69,6 +69,6 @@ def get_dataloader(**kwargs):
 
 if __name__ == '__main__':
 
-    dataloader = get_dataloader(img_dir='../devset/images', lbl_dir='../devset/labels', batch_size=4, in_size=20, out_size=10, transform=None, shuffle=True)
+    dataloader = get_dataloader(img_dir='../devset/images', lbl_dir='../devset/labels', batch_size=4, in_size=224, out_size=216, transform=None, shuffle=True)
     images, labels = next(iter(dataloader))
     print(labels.shape)

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import torch
 from torchvision.transforms import ToTensor
+import torch.nn.functional as F
 
 from models.unet import UNet
 
@@ -29,7 +30,7 @@ def main(args):
         os.makedirs(args['output'])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 2).to(device)
+    net = UNet(3, 3).to(device)
 
     net.load_state_dict(torch.load(args['weights'], map_location=device))
 
@@ -39,17 +40,25 @@ def main(args):
     img = cv2.resize(img, (W, H))
     x = ToTensor()(img[:, :, ::-1].copy()).unsqueeze(0)
 
-    y = np.where(net(x).squeeze() > 0.5, 1, 0).astype('uint8')
-    pg_mask, ft_mask = y[0], y[1]
+    with torch.no_grad():
+        y = F.softmax(net(x), dim=1)
 
-    pg_mask = cv2.resize(pg_mask, (W, H), interpolation=cv2.INTER_NEAREST)
-    ft_mask = cv2.resize(ft_mask, (W, H), interpolation=cv2.INTER_NEAREST)
-
-    collage = np.concatenate([pg_mask, ft_mask], axis=1)
-    plt.imshow(collage)
+    mask = y.cpu().squeeze().permute(1, 2, 0)
+    plt.imshow(mask)
     plt.show()
 
-    return pg_mask, ft_mask
+    # y = np.where(net(x).squeeze() > 0.5, 1, 0).astype('uint8')
+    # y.max(1)
+    # pg_mask, ft_mask = y[0], y[1]
+    #
+    # pg_mask = cv2.resize(pg_mask, (W, H), interpolation=cv2.INTER_NEAREST)
+    # ft_mask = cv2.resize(ft_mask, (W, H), interpolation=cv2.INTER_NEAREST)
+    #
+    # collage = np.concatenate([pg_mask, ft_mask], axis=1)
+    # plt.imshow(collage)
+    # plt.show()
+
+    # return pg_mask, ft_mask
 
 
 if __name__ == '__main__':

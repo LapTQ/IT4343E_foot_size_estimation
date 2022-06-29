@@ -16,7 +16,6 @@ class Block(nn.Module):
             nn.Conv2d(in_channels, mid_channels, kernel_size=3),
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
-
             nn.Conv2d(mid_channels, out_channels, kernel_size=3),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
@@ -44,10 +43,14 @@ class Up(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.up = nn.Upsample(scale_factor=2, mode='bilinear')
+        self.conv_short = nn.Conv2d(in_channels // 2, in_channels // 2, kernel_size=3)
         self.conv = Block(in_channels, out_channels, in_channels // 2)
 
     def forward(self, x, x_short):
+        x_short = self.conv_short(x_short)
+        print(x.shape, x_short.shape)
         x = self.up(x)
+        print(x.shape)
         dy = x_short.size()[2] - x.size()[2]
         dx = x_short.size()[3] - x.size()[3]
         x = F.pad(x, [dx // 2, dx - dx // 2, dy // 2, dy - dy // 2])
@@ -81,7 +84,7 @@ class UNet(nn.Module):
         self.up3 = Up(256, 64)
         self.up4 = Up(128, 64)
         self.out = Out(64, n_classes)
-        self.softmax = nn.Softmax(dim=1)
+        # self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         x1 = self.inp(x)
@@ -94,12 +97,13 @@ class UNet(nn.Module):
         x = self.up3(x, x2)
         x = self.up4(x, x1)
         x = self.out(x)
+        # x = self.softmax(x)
 
-        return self.softmax(x)
+        return x
 
 
 if __name__ == '__main__':
-    unet = UNet(3, 2)
-    a = torch.ones((1, 3, 224, 224))
+    unet = UNet(3, 3)
+    a = torch.ones((4, 3, 224, 224))
     print(unet(a).shape)
-    print(unet(a))
+
