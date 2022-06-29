@@ -35,6 +35,6 @@ if file:
     with torch.no_grad():
         y = F.sigmoid(net(x)['out'])
 
-    mask = y.cpu().squeeze().numpy()
+    mask = (y.cpu().squeeze().numpy() * 255).astype('uint8')
 
     st.image(Image.fromarray(mask))
