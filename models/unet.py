@@ -16,6 +16,9 @@ class Block(nn.Module):
             nn.Conv2d(in_channels, mid_channels, kernel_size=3),
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
+            nn.Conv2d(mid_channels, mid_channels, kernel_size=3),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True),
             nn.Conv2d(mid_channels, out_channels, kernel_size=3),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
@@ -48,9 +51,7 @@ class Up(nn.Module):
 
     def forward(self, x, x_short):
         x_short = self.conv_short(x_short)
-        print(x.shape, x_short.shape)
         x = self.up(x)
-        print(x.shape)
         dy = x_short.size()[2] - x.size()[2]
         dx = x_short.size()[3] - x.size()[3]
         x = F.pad(x, [dx // 2, dx - dx // 2, dy // 2, dy - dy // 2])
