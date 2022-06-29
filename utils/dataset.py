@@ -1,6 +1,8 @@
 import cv2
+import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToTensor
+from torch.nn.functional import one_hot
 import albumentations as A
 import numpy as np
 import os
@@ -19,7 +21,7 @@ class FootDataset(Dataset):
         self.img_names = os.listdir(img_dir)
 
     def __len__(self):
-        return self.n # len(self.img_names)
+        return self.n
 
     def __getitem__(self, idx):
         sample = random.choices(self.img_names, k=self.n)
@@ -41,12 +43,14 @@ class FootDataset(Dataset):
         img = A.Resize(self.in_size, self.in_size)(image=img)['image']
         pg_mask, ft_mask = A.Resize(self.out_size, self.out_size)(image=img, masks=[pg_mask, ft_mask])['masks']
 
-        lbl =  np.stack([pg_mask, ft_mask], axis=2)
+        lbl = np.zeros((self.out_size, self.out_size), dtype='int64')
+        lbl[pg_mask == 255] = 1
+        lbl[ft_mask == 255] = 2
 
         # uint8 [0, 255] (h, w, c) to float [0., 1.] (c, h, w)
-        to_tensor = ToTensor()
-        img = to_tensor(img.copy())
-        lbl = to_tensor(lbl.copy())
+        img = ToTensor()(img.copy())
+        lbl = torch.from_numpy(lbl)
+        lbl = one_hot(lbl).permute(2, 0, 1)
 
         return img, lbl
 
@@ -65,6 +69,6 @@ def get_dataloader(**kwargs):
 
 if __name__ == '__main__':
 
-    dataloader = get_dataloader(img_dir='../trainset/images', lbl_dir='../trainset/labels', batch_size=4, shuffle=True)
+    dataloader = get_dataloader(img_dir='../devset/images', lbl_dir='../devset/labels', batch_size=4, in_size=20, out_size=10, transform=None, shuffle=True)
     images, labels = next(iter(dataloader))
-    print(labels[0])
+    print(labels.shape)

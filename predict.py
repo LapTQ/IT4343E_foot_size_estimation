@@ -29,7 +29,7 @@ def main(args):
         os.makedirs(args['output'])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3).to(device)
+    net = UNet(3, 2).to(device)
 
     net.load_state_dict(torch.load(args['weights'], map_location=device))
 

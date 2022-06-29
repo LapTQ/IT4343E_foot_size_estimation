@@ -32,7 +32,7 @@ def parse_opt():
 def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3).to(device)
+    net = UNet(3, 2).to(device)
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
@@ -67,6 +67,7 @@ def main(args):
         batch_size=args['batch_size'],
         in_size=args['size'],
         out_size=out_size,
+        transform=None,
         shuffle=False
     )
 

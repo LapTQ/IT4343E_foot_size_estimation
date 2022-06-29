@@ -171,16 +171,10 @@ def main(args):
             syn_img = paste(syn_pg, syn_bg, syn_pg_msk)
             syn_img = paste(syn_ft, syn_img, syn_ft_msk)
 
-            transform = get_whole_transform(p=0.5)
-            transformed = transform(image=cv2.cvtColor(syn_img, cv2.COLOR_BGR2RGB), masks=[syn_pg_msk, syn_ft_msk])
-            syn_img = cv2.cvtColor(transformed['image'], cv2.COLOR_RGB2BGR)
-            syn_pg_msk, syn_ft_msk = transformed['masks']
-
             name = ('000000' + str(start + i))[-6:]
             cv2.imwrite(os.path.join(img_dir, name + '.jpg'), syn_img)
             cv2.imwrite(os.path.join(lbl_dir, name + '_pg.jpg'), syn_pg_msk)
             cv2.imwrite(os.path.join(lbl_dir, name + '_ft.jpg'), syn_ft_msk)
-
 
             # TODO sinh thêm ảnh không có chân/giấy
 
