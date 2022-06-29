@@ -5,6 +5,8 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
+
 import albumentations as A
 import cv2
 
@@ -32,7 +34,10 @@ def parse_opt():
 def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    net = UNet(3, 3).to(device)
+
+    # net = UNet(3, 3).to(device)
+    net = deeplabv3_mobilenet_v3_large(pretrained=True)
+    net.classifier[4] = torch.nn.Conv2d(256, 3, kernel_size=1).to(device)
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
