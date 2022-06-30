@@ -68,7 +68,7 @@ def main(args):
 
     net.load_state_dict(torch.load(args['weights'], map_location=device))
 
-    args['input'] = '/home/tran/Downloads/foots_all/images/23823.jpeg' #24071 23805 23808 23809 23810 23822 23823 23825 23829
+    args['input'] = '/home/tran/Downloads/foots_all/images/24078.jpeg' #24071 23805 23808 23809 23810 23822 23823 23825 23829
 
     img = cv2.imread(args['input'])
     scale = 350/max(img.shape)
@@ -108,6 +108,7 @@ def main(args):
             break
 
     if fail:
+        print('End')
         return
 
     demo = cv2.drawContours(cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), [approx], -1, (0, 255, 0))

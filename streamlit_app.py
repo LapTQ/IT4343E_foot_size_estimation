@@ -79,6 +79,7 @@ if file:
 
     if fail:
         st.write('Cannot estimate with this image. Please capture again.')
+        return
 
     demo = cv2.drawContours(cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), [approx], -1, (0, 255, 0))
     plt.subplot(2, 2, 3);
