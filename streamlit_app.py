@@ -117,4 +117,7 @@ def main():
         st.image(Image.open('demo.png'))
         st.write(f'Estimated size: {(297 - 2 * (297 - max(w, h))) / 10}')
 
-main()
+try:
+    main()
+except:
+    st.write('Cannot estimate with this image. Please capture again.')
