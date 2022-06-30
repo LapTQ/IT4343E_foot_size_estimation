@@ -42,7 +42,7 @@ def main(args):
 
     if args['weights']:
         print('Loading pretrained at ' + args['weights'])
-        net.load_state_dict(torch.load(args['weights']), map_location=device)
+        net.load_state_dict(torch.load(args['weights'], map_location=device))
 
     # TODO auto detect #channels
     out_size = net(torch.zeros((2, 3, args['size'], args['size']),
