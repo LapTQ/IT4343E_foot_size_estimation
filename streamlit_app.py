@@ -11,6 +11,8 @@ from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large
 
 st.title('Foot size estimation')
 
+st.write("""[github](https://github.com/LapTQ/foot_size_estimation)""")
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 net = deeplabv3_mobilenet_v3_large(pretrained=True)
