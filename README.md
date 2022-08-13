@@ -23,6 +23,6 @@ python train.py --epoch 50 --batch_size 8 --size 350
 
 # Try this app
 
-[mine](https://laptq-foot-size-estimation-streamlit-app-ktzmqd.streamlitapp.com/)
+[here](https://share.streamlit.io/LapTQ/it4343e_foot_size_estimation/main/streamlit_app.py)
 
-[here](https://share.streamlit.io/LapTQ/foot_size_estimation/main/streamlit_app.py)
+[mine](https://laptq-it4343e-foot-size-estimation-streamlit-app-7fd5ix.streamlitapp.com/)
